@@ -1,6 +1,6 @@
 import math
 import pygame
-from constants import AIR_DENSITY, BODY_COLOR, BODY_RADIUS, FORCE_LINE_COLOR, FORCE_LINE_WIDTH, GRAVITY, GROUND_FRICTION_COEF, HEIGHT, PFORCE, ROCKET_DRAG_COEF
+from constants import BODY_COLOR, BODY_RADIUS, FORCE_LINE_COLOR, FORCE_LINE_WIDTH, GRAVITY, GROUND_FRICTION_COEF, HEIGHT, PFORCE
 from particle import ParticleEmitter
 from force import Force
 
@@ -39,7 +39,7 @@ class Body:
             pygame.draw.line(screen, 
                              FORCE_LINE_COLOR, 
                              (int(self.x), int(self.y)), 
-                             (int(self.x) + (f.x), int(self.y) + (f.y)),
+                             (int(self.x) + (f.x / 10000), int(self.y) + (f.y / 10000)),
                              FORCE_LINE_WIDTH)
             
     def draw_fuelbar(self, screen):
@@ -87,33 +87,13 @@ class Body:
         if self.on_ground:
             normal_force = (self.mass + self.fuel_mass) * abs(GRAVITY)
             friction_force = normal_force * GROUND_FRICTION_COEF
-            if self.dx > 0:
+            if self.dx > 0:              
                 friction_force = min(friction_force, self.dx)  # Ensure friction doesn't reverse the direction
                 self.forces.append(Force(-friction_force, 0))  # Apply friction to the left
             elif self.dx < 0:
                 friction_force = min(friction_force, -self.dx)
                 self.forces.append(Force(friction_force, 0))  # Apply friction to the right
 
-    def apply_drag(self):
-        # Calculate the cross-sectional area of the body (circular cross-section)
-        cross_sectional_area = math.pi * (BODY_RADIUS ** 2)
-        
-        # Calculate the velocity magnitude
-        velocity_magnitude = math.sqrt(self.dx**2 + self.dy**2)
-
-        if velocity_magnitude > 0:
-            # Calculate drag force magnitude
-            drag_magnitude = 0.5 * AIR_DENSITY * (velocity_magnitude ** 2) * ROCKET_DRAG_COEF * cross_sectional_area
-
-            # Drag acts opposite to the direction of velocity, so we apply the drag force in the opposite direction
-            drag_x = -drag_magnitude * (self.dx / velocity_magnitude)
-            drag_y = -drag_magnitude * (self.dy / velocity_magnitude)
-
-            print(self.y)
-
-            # Add drag force to the list of forces
-            self.forces.append(Force(drag_x, drag_y))
-    
     def display_info(self, screen):
         # Create the text to display
         font = pygame.font.SysFont(None, 25)
@@ -130,9 +110,6 @@ class Body:
         # Add force of gravity
         f_gravity = Force(0, GRAVITY * (self.mass + self.fuel_mass))
         self.forces.append(f_gravity)
-
-        # Apply drag
-        #self.apply_drag()
 
         # Check for ground collision
         self.check_ground_collision()
@@ -154,7 +131,7 @@ class Body:
         self.x += self.dx
         self.y += self.dy
 
-        self.fuel_mass = self.fuel * 0.1
+        self.fuel_mass = self.fuel * 0.8
         self.max_height = max(self.max_height, 0.01 * (HEIGHT - self.y))
 
     def update_particle_emitters(self):

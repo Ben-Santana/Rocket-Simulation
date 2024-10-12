@@ -2,10 +2,11 @@ import numpy
 import pygame
 from body import Body
 from particle import ParticleEmitter
-from constants import TANK_SIZE, BODY_MASS, ENDING_FUEL_COLOR, STARTING_FUEL_COLOR, WIDTH, BODY_RADIUS, HEIGHT, PFORCE, BACKGROUND, FPS, DRAW_FORCES
+from constants import LOSS_OF_FUEL, TANK_SIZE, BODY_MASS, ENDING_FUEL_COLOR, STARTING_FUEL_COLOR, WIDTH, BODY_RADIUS, HEIGHT, PFORCE, BACKGROUND, FPS, DRAW_FORCES
 
 # Initialize Pygame ------------------------------------
 pygame.init()
+takeOff = False
 
 # Set up the display -----------------------------------
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -33,20 +34,34 @@ while running:
     body.rightPropulsion = False
     body.leftPropulsion = False
 
-    if(keys[pygame.K_LEFT] and body.fuel > 0):
+    if(keys[pygame.K_LEFT] and body.fuel > 0 and not takeOff):
         body.add_left_particle()
-        body.fuel = max(body.fuel - 10, 0)
+        body.fuel = max(body.fuel - LOSS_OF_FUEL, 0)
         # Propel rocket
         body.leftPropulsion = keys[pygame.K_LEFT]
 
-    if(keys[pygame.K_RIGHT] and body.fuel > 0):
+    if(keys[pygame.K_RIGHT] and body.fuel > 0 and not takeOff):
         body.add_right_particle()
-        body.fuel = max(body.fuel - 10, 0)
+        body.fuel = max(body.fuel - LOSS_OF_FUEL, 0)
         # Propel rocket 
         body.rightPropulsion = keys[pygame.K_RIGHT]
 
     if(keys[pygame.K_r]):
         body.fuel = body.tank_size
+
+    if(keys[pygame.K_0]):
+        takeOff = True
+
+    if(takeOff):
+        body.add_right_particle()
+        body.fuel = max(body.fuel - LOSS_OF_FUEL, 0)
+        # Propel rocket 
+        body.rightPropulsion = takeOff
+        body.add_left_particle()
+        body.fuel = max(body.fuel - LOSS_OF_FUEL, 0)
+        # Propel rocket
+        body.leftPropulsion = takeOff
+
     
     # Fill the screen with the background color
     screen.fill(BACKGROUND)
